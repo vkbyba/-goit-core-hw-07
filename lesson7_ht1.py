@@ -72,19 +72,6 @@ class AddressBook(UserDict):
     def add_record(self, record):
         self.data[record.name.value] = record
 
-    @input_error
-    def add_contact(self, args):
-        name, phone, *_ = args
-        record = self.data.get(name)
-        message = "Contact updated."
-        if record is None:
-            record = Record(name)
-            self.add_record(record)
-            message = "Contact added."
-        if phone:
-            record.add_phone(phone)
-        return message
-
     def get_upcoming_birthdays(self):
         today = datetime.today()
         upcoming_birthdays = []
@@ -95,6 +82,22 @@ class AddressBook(UserDict):
                 if today <= birthday_this_year <= today + timedelta(days=7):
                     upcoming_birthdays.append((name, record.get_birthday()))
         return upcoming_birthdays
+
+    @staticmethod
+    @input_error
+    def add_contact(args, book):
+        if len(args) < 2:
+            return "Not enough arguments. Usage: add <name> <phone>"
+        name, phone = args[0], args[1]
+        record = book.data.get(name)
+        if record is None:
+            record = Record(name)
+            book.add_record(record)
+            message = "Contact added."
+        else:
+            message = "Contact updated."
+            record.add_phone(phone)
+        return message
 
 @input_error
 def add_birthday(args, book):
@@ -144,7 +147,7 @@ def main():
             print("How can I help you?")
 
         elif command == "add":
-            print(book.add_contact(args))
+            print(book.add_contact(args, book))
 
         elif command == "change":
             if len(args) < 3:
